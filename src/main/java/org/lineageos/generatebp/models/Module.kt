@@ -6,6 +6,8 @@
 package org.lineageos.generatebp.models
 
 import org.gradle.api.artifacts.ModuleVersionIdentifier
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
 import org.lineageos.generatebp.utils.Logger
 import kotlin.reflect.safeCast
@@ -77,5 +79,43 @@ data class Module(
                 it.extension == "aar"
             },
         )
+
+        fun fromProjectDependency(
+            it: ProjectDependency,
+            targetSdk: Int,
+        ): Module {
+            val dependencyProject = it.dependencyProject
+
+            return Module(
+                dependencyProject.group.toString(),
+                dependencyProject.name,
+                dependencyProject.version.toString(),
+                dependencyProject.configurations.flatMap { configuration ->
+                    configuration.allDependencies
+                }.mapNotNull { dependency ->
+                    dependency as? ProjectDependency
+                }.map {
+                    fromProjectDependency(it, targetSdk)
+                }.toSet(),
+                dependencyProject.configurations.flatMap { configuration ->
+                    configuration.allDependencies
+                }.firstNotNullOfOrNull { dependency ->
+                    dependency as? ResolvedArtifact
+                }?.let { resolvedArtifact ->
+                    Artifact.fromResolvedArtifact(resolvedArtifact, targetSdk)
+                },
+                dependencyProject.configurations.flatMap { configuration ->
+                    configuration.allDependencies
+                }.mapNotNull { dependency ->
+                    dependency as? ResolvedDependency
+                }.map {
+                    it.parents.all { parents ->
+                        parents.moduleArtifacts.all { it.extension == "jar" }
+                    } && it.moduleArtifacts.any {
+                        it.extension == "aar"
+                    }
+                }.any { it },
+            )
+        }
     }
 }

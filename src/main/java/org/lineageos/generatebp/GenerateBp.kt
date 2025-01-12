@@ -6,6 +6,7 @@
 package org.lineageos.generatebp
 
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.kotlin.dsl.get
 import org.lineageos.generatebp.ext.indentWithSpaces
@@ -27,6 +28,12 @@ internal class GenerateBp(
     private val configuration = project.configurations["releaseRuntimeClasspath"]
     private val resolvedConfiguration = configuration.resolvedConfiguration
 
+    private val localProjectDependencies = configuration.allDependencies
+        .filterIsInstance<ProjectDependency>()
+        .map {
+            Module.fromProjectDependency(it, targetSdk)
+        }
+
     private val isKotlinBomDependency = { dependency: ResolvedDependency ->
         dependency.moduleGroup == "org.jetbrains.kotlin" && dependency.moduleName == "kotlin-bom"
     }
@@ -34,10 +41,13 @@ internal class GenerateBp(
         !isKotlinBomDependency(dependency)
     }
 
-    private val projectDependencies =
+    private val resolvedProjectDependencies =
         resolvedConfiguration.firstLevelModuleDependencies.filter(isValidProjectDependency).map {
             Module.fromResolvedDependency(it, targetSdk)
         }
+
+    private val projectDependencies =
+        (localProjectDependencies + resolvedProjectDependencies).toSortedSet()
 
     private val allDependencies =
         resolvedConfiguration.firstLevelModuleDependencies.asSequence().map {
