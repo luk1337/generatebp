@@ -20,7 +20,7 @@ import kotlin.reflect.safeCast
  * @param artifact The artifact of this module
  */
 data class Module(
-    val group: String,
+    var group: String,
     val name: String,
     val version: String = VERSION_ANY,
     val dependencies: Set<Module> = setOf(),

@@ -104,7 +104,7 @@ internal class GenerateBp(
         // Update app/libs
         allDependencies.forEach {
             // Skip modules that are available in AOSP
-            if (isAvailableInAOSP(it)) {
+            if (isAvailableInAOSPInternal(it)) {
                 return@forEach
             }
 
@@ -212,7 +212,7 @@ internal class GenerateBp(
     }
 
     private val Module.aospModuleName
-        get() = if (isAvailableInAOSP(this)) {
+        get() = if (isAvailableInAOSPInternal(this)) {
             moduleNameAOSP("${group}:${name}")
         } else {
             "${project.rootProject.name}_${group}_${name}"
@@ -238,6 +238,14 @@ internal class GenerateBp(
         }.indentWithSpaces(8).joinToString("") {
             "\n$it"
         } + "\n${spaces(4)}"
+    }
+
+    private fun isAvailableInAOSPInternal(module: Module): Boolean {
+        // Possibly strip kotlin multiplatform suffix
+        if (module.group.startsWith("org.jetbrains.androidx.")) {
+            module.group = module.group.replace("org.jetbrains.androidx.", "androidx.")
+        }
+        return isAvailableInAOSP(module)
     }
 
     companion object {

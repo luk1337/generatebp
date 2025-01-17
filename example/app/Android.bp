@@ -25,6 +25,7 @@ android_app {
         "Example_io.coil-kt.coil3_coil-core-android",
         "Example_io.coil-kt.coil3_coil-network-core-android",
         "Example_io.coil-kt.coil3_coil-network-okhttp",
+        "androidx.lifecycle_lifecycle-common",
         "kotlin-stdlib-jdk8",
     ],
 
